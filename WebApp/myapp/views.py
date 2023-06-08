@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render
 from .models import Book
 from .serializers import BookSerializer
@@ -9,6 +10,14 @@ from rest_framework import status
 def books_list(request):
     if request.method == 'GET':
         books = Book.objects.all()
+        search = request.query_params.get('search','')
+        category = request.query_params.get('category','')
+        if search:
+            title_q=Q(title__contains=search)
+            author_q = Q(author__contains=search)
+            books=books.filter(title_q | author_q)
+        if category:
+            books = books.filter(category__name__icontains=category)
         serializer = BookSerializer(books,many=True)
         return Response(serializer.data)
     if request.method == 'POST':
